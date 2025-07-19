@@ -122,14 +122,46 @@ class TypeDefinition {
     final jsonKey = "json['$key']";
     final fieldKey =
         fixFieldName(key, typeDef: this, privateField: privateField);
+
     if (isPrimitive) {
-      if (name == 'List') {
-        return "$fieldKey = json['$key']?.cast<$subtype>();";
+      if (name == 'String' || name == 'String?') {
+        return '''
+    if (json['$key'] is String) {
+      $fieldKey = json['$key'];
+    }
+    ''';
+      } else if (name == 'int' || name == 'int?') {
+        return '''
+    if (json['$key'] is int) {
+      $fieldKey = json['$key'];
+    }
+    ''';
+      } else if (name == 'double' || name == 'double?') {
+        return '''
+    if (json['$key'] is double) {
+      $fieldKey = json['$key'];
+    }
+    ''';
+      } else if (name == 'bool' || name == 'bool?') {
+        return '''
+    if (json['$key'] is bool) {
+      $fieldKey = json['$key'];
+    }
+    ''';
+      } else if (name == 'num' || name == 'num?') {
+        return '''
+    if (json['$key'] is num) {
+      $fieldKey = json['$key'];
+    }
+    ''';
+      } else if (name == 'List') {
+        return '''
+    if (json['$key'] is List) {
+      $fieldKey = json['$key']?.cast<$subtype>();
+    }
+    ''';
       }
-      if (name == 'num?') {
-        return "$fieldKey = json['$key'] as num?;";
-      }
-      return "$fieldKey = json['$key'];";
+      return "$fieldKey = json['$key']";
     } else if (name == 'List' && subtype == 'DateTime') {
       return "$fieldKey = json['$key'].map((v) => DateTime.tryParse(v));";
     } else if (name == 'DateTime') {
@@ -394,8 +426,4 @@ class ClassDefinition {
       }
     }
   }
-
-  @override
-  // TODO: implement hashCode
-  int get hashCode => super.hashCode;
 }

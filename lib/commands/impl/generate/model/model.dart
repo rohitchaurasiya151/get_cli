@@ -1,6 +1,5 @@
 import 'dart:io';
 
-
 import 'package:dcli/dcli.dart';
 import 'package:http/http.dart';
 import 'package:path/path.dart' as p;
@@ -33,14 +32,27 @@ class GenerateModelCommand extends Command {
     }
 
     FileModel newFileModel;
+
     final classGenerator = ModelGenerator(
         name, containsArg('--private'), containsArg('--withCopy'));
 
     newFileModel = Structure.model(name, 'model', false, on: onCommand);
 
-    var dartCode = classGenerator.generateDartClasses(await _jsonRawData);
-
     var modelPath = '${newFileModel.path}_model.dart';
+    final file = File(modelPath);
+
+    // 👇 Check if class already exists
+    if (file.existsSync()) {
+      final fileContent = file.readAsStringSync();
+      if (fileContent.contains('class ${newFileModel.name}')) {
+        LogService.info(
+            '⛔️ Skipped: class ${newFileModel.name} already exists in $modelPath');
+        return;
+      }
+    }
+
+    // ✅ Continue to write model if not found
+    var dartCode = classGenerator.generateDartClasses(await _jsonRawData);
 
     var model = writeFile(modelPath, dartCode.result, overwrite: true);
 
